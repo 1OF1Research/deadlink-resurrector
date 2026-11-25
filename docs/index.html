@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeadLink Resurrector — report</title>
+<style>body{font-family:system-ui,sans-serif;margin:2rem;line-height:1.5;color:#1a1a1a}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:.45rem .6rem;text-align:left;vertical-align:top}th{background:#f2f2f2}code{word-break:break-all}</style>
+</head>
+<body>
+<h1>DeadLink Resurrector — report</h1>
+<p>Total: 6 checked, 2 needing resurrection.</p>
+<table>
+<thead><tr><th>URL</th><th>Verdict</th><th>Status</th><th>Redirect / note</th><th>Next step</th></tr></thead>
+<tbody>
+<tr><td><code>http://example.com/</code></td><td>alive</td><td>200</td><td>—</td><td>Keep as-is; re-check on the next pass.</td></tr>
+<tr><td><code>http://example.com/this-page-does-not-exist-kiroween</code></td><td>dead-client</td><td>404</td><td>—</td><td>Find an archived copy or a successor page, then replace the link. Archived-copy lookup: https://web.archive.org/web/*/http://example.com/this-page-does-not-exist-kiroween</td></tr>
+<tr><td><code>https://example.com/</code></td><td>alive</td><td>200</td><td>—</td><td>Keep as-is; re-check on the next pass.</td></tr>
+<tr><td><code>https://example.com/this-page-does-not-exist-kiroween</code></td><td>dead-client</td><td>404</td><td>—</td><td>Find an archived copy or a successor page, then replace the link. Archived-copy lookup: https://web.archive.org/web/*/https://example.com/this-page-does-not-exist-kiroween</td></tr>
+<tr><td><code>http://github.com/</code></td><td>moved</td><td>301</td><td>https://github.com/</td><td>Update the link to the redirect target shown.</td></tr>
+<tr><td><code>not a url</code></td><td>invalid</td><td>—</td><td>—</td><td>Fix the URL text itself — it does not parse as an http(s) URL.</td></tr>
+</tbody>
+</table>
+</body>
+</html>
