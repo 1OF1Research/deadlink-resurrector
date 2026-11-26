@@ -12,9 +12,19 @@ the web is built on, rotting silently) brought back to working life.
 ## Use
 ```
 cargo build --release
-./target/release/deadlink-resurrector [--follow] [--json|--html] urls.txt report.md
+./target/release/deadlink-resurrector [--follow] [--from-text] [--json|--html] urls.txt report.md
 ```
 `urls.txt`: one URL per line, `#` lines are comments.
+With `--from-text`, the input is any document instead: every http(s)
+URL in it is extracted and checked.
+
+## v0.6
+Optional `--from-text` reads a document (Markdown, notes, a copied
+page), extracts its URLs — trailing sentence punctuation stripped,
+duplicates removed, first-seen order kept — and checks those, so the
+tool points straight at the document whose links may have rotted.
+Native Kiro hooks now ship in `.kiro/hooks/` as v1 JSON files
+(test-on-save, spec-check after a task). Earlier: `--html` below.
 
 ## v0.5
 Optional `--html` writes the same report as one self-contained HTML
@@ -37,7 +47,8 @@ needs-tls-probe (https, only when no TLS route exists on the machine) · invalid
 Spec-driven development: `.kiro/specs/deadlink-resurrector/` holds the
 requirements and design Kiro implemented against; `.kiro/steering/product.md`
 holds the product rules (never call a link dead on evidence not gathered);
-`.kiro/hooks/` records the test-on-save workflow. Full write-up in the
+`.kiro/hooks/` holds native v1 hook files for the test-on-save and
+spec-check workflow. Full write-up in the
 Devpost submission at submission time.
 
 ## License

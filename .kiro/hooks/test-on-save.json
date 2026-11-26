@@ -1,0 +1,1 @@
+{"hooks":[{"action":{"command":"cargo test","timeout":300,"type":"command"},"description":"Run the full test suite whenever the agent saves a Rust source file.","matcher":".*\\.rs$","name":"test-on-save","trigger":"PostFileSave"}],"version":"v1"}

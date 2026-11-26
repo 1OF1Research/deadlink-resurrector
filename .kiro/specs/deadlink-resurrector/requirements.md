@@ -37,3 +37,11 @@
     page: totals line plus a table in input order, all values escaped,
     no external assets. `--json` and `--html` together is a usage
     error (exit 2). Markdown remains the default, byte-identical.
+14. (v0.6) `--from-text` treats the input file as a document and
+    extracts every http(s) URL from it: a URL runs until whitespace
+    or < > " ', trailing sentence punctuation ( . , ; : ! ? ) ] } )
+    is stripped, duplicates are removed, first-seen order is kept.
+    Without the flag, line mode is unchanged and byte-identical.
+15. (v0.6) Native Kiro hooks ship as v1 JSON files in `.kiro/hooks/`
+    (test-on-save as a command action, spec-check as an agent
+    action), in the format Kiro's current documentation defines.

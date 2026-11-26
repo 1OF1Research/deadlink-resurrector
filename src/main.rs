@@ -16,6 +16,11 @@
 //! v0.5: optional `--html` writes the same rows as one self-contained
 //! HTML page (no external assets) — the demo page shape a reader can
 //! open in a browser as the working-app page.
+//! v0.6: optional `--from-text` treats the input file as a document
+//! (Markdown, notes, a copied page) and extracts every http(s) URL
+//! from it — trailing sentence punctuation stripped, duplicates
+//! removed, first-seen order kept — so a maintainer can point the
+//! tool straight at the document whose links may have rotted.
 
 use std::env;
 use std::fs;
@@ -145,7 +150,7 @@ pub fn probe_https(url: &str) -> (Option<u16>, Option<String>, bool) {
         Err(_) => return (None, None, false),
     };
     if let Some(mut stdin) = child.stdin.take() {
-        let req = format!("GET {path} HTTP/1.0\r\nHost: {host}\r\nUser-Agent: deadlink-resurrector/0.5\r\n\r\n");
+        let req = format!("GET {path} HTTP/1.0\r\nHost: {host}\r\nUser-Agent: deadlink-resurrector/0.6\r\n\r\n");
         let _ = stdin.write_all(req.as_bytes());
     }
     let out = match child.wait_with_output() {
@@ -177,7 +182,7 @@ pub fn probe_http(url: &str) -> (Option<u16>, Option<String>) {
     };
     let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
     let _ = stream.set_write_timeout(Some(Duration::from_secs(10)));
-    let req = format!("GET {path} HTTP/1.0\r\nHost: {host}\r\nUser-Agent: deadlink-resurrector/0.5\r\n\r\n");
+    let req = format!("GET {path} HTTP/1.0\r\nHost: {host}\r\nUser-Agent: deadlink-resurrector/0.6\r\n\r\n");
     if stream.write_all(req.as_bytes()).is_err() {
         return (None, None);
     }
@@ -186,6 +191,28 @@ pub fn probe_http(url: &str) -> (Option<u16>, Option<String>) {
         return (None, None);
     }
     (extract_status(&buf), extract_location(&buf))
+}
+
+/// Extract every http(s) URL from a document, in first-seen order,
+/// duplicates removed. A URL runs until whitespace or one of < > " '.
+/// Trailing sentence punctuation ( . , ; : ! ? ) ] } ) is stripped —
+/// those characters end sentences and Markdown links far more often
+/// than they end real URLs, and a stripped URL can be re-checked.
+pub fn extract_urls(text: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for token in text.split(|c: char| c.is_whitespace() || matches!(c, '<' | '>' | '"' | '\'')) {
+        for scheme in ["https://", "http://"] {
+            if let Some(start) = token.find(scheme) {
+                let raw = &token[start..];
+                let url = raw.trim_end_matches(|c| matches!(c, '.' | ',' | ';' | ':' | '!' | '?' | ')' | ']' | '}'));
+                if url.len() > scheme.len() && !out.iter().any(|u| u == url) {
+                    out.push(url.to_string());
+                }
+                break;
+            }
+        }
+    }
+    out
 }
 
 /// Deterministic Wayback Machine lookup URL for a dead link.
@@ -349,9 +376,10 @@ fn main() -> ExitCode {
     let follow = raw_args.iter().any(|a| a == "--follow");
     let json = raw_args.iter().any(|a| a == "--json");
     let html = raw_args.iter().any(|a| a == "--html");
-    let args: Vec<String> = raw_args.into_iter().filter(|a| a != "--follow" && a != "--json" && a != "--html").collect();
+    let from_text = raw_args.iter().any(|a| a == "--from-text");
+    let args: Vec<String> = raw_args.into_iter().filter(|a| a != "--follow" && a != "--json" && a != "--html" && a != "--from-text").collect();
     if args.len() != 3 || (json && html) {
-        eprintln!("usage: deadlink-resurrector [--follow] [--json|--html] <urls.txt> <report.md|report.json|report.html>");
+        eprintln!("usage: deadlink-resurrector [--follow] [--from-text] [--json|--html] <urls.txt> <report.md|report.json|report.html>");
         return ExitCode::from(2);
     }
     let input = match fs::read_to_string(&args[1]) {
@@ -361,11 +389,15 @@ fn main() -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    let urls: Vec<String> = input
-        .lines()
-        .map(|l| l.trim().to_string())
-        .filter(|l| !l.is_empty() && !l.starts_with('#'))
-        .collect();
+    let urls: Vec<String> = if from_text {
+        extract_urls(&input)
+    } else {
+        input
+            .lines()
+            .map(|l| l.trim().to_string())
+            .filter(|l| !l.is_empty() && !l.starts_with('#'))
+            .collect()
+    };
     // Bounded concurrency: chunks of 8 scoped threads, input order preserved.
     let mut rows = Vec::new();
     for chunk in urls.chunks(8) {
@@ -524,6 +556,14 @@ mod tests {
         assert!(out.contains("<td>invalid</td><td>—</td>"));
         assert!(!out.contains("src="));
         assert!(!out.contains("http://example.com/?a=1&b=2\""));
+    }
+
+    #[test]
+    fn extract_urls_from_document() {
+        let doc = "See [old](https://example.com/old) and http://example.com/a.\nDup: https://example.com/old again, plus (http://example.com/b), end.";
+        assert_eq!(extract_urls(doc), vec!["https://example.com/old".to_string(), "http://example.com/a".to_string(), "http://example.com/b".to_string()]);
+        assert!(extract_urls("no links here").is_empty());
+        assert!(extract_urls("bare https:// alone").is_empty());
     }
 
     #[test]

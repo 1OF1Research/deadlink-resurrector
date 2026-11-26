@@ -1,6 +1,6 @@
 [package]
 name = "deadlink-resurrector"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 license = "MIT"
 description = "Bring dead links back to life: probe a list of URLs, classify each one, and generate a resurrection report with the exact failure and the next step for each link."

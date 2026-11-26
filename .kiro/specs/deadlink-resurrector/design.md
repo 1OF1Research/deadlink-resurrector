@@ -26,3 +26,14 @@
   data. One file, inline style only, no external assets — so the page
   works opened from disk and as a static hosted demo page. Escaping
   covers &, <, >, double and single quotes.
+- Extraction mode (v0.6): `--from-text` is a second input reader,
+  not a probe change — extracted URLs feed the same probe and the
+  same renderers, so every existing report byte is unchanged in
+  line mode. Extraction is pure string work (no network), with the
+  punctuation trade-off stated in the spec: trailing sentence
+  punctuation is stripped even though a rare real URL could end
+  with it, because a stripped URL can simply be re-checked.
+- Hooks (v0.6): native v1 JSON hook files replace the planned-hooks
+  note. The format was read from Kiro's current hooks documentation
+  at build time, not written from memory of the older `.kiro.hook`
+  shape.
