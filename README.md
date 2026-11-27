@@ -45,7 +45,8 @@ needs-tls-probe (https, only when no TLS route exists on the machine) · invalid
 
 ## How Kiro was used
 Spec-driven development: `.kiro/specs/deadlink-resurrector/` holds the
-requirements and design Kiro implemented against; `.kiro/steering/product.md`
+requirements, design, and task list Kiro implemented against;
+`.kiro/steering/product.md`
 holds the product rules (never call a link dead on evidence not gathered);
 `.kiro/hooks/` holds native v1 hook files for the test-on-save and
 spec-check workflow. Full write-up in the
